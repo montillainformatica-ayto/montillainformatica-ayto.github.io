@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Productos</title>
+    
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background-color: #f0f2f5; 
+            margin: 0; 
+            padding: 20px; 
+        }
+        h1 { 
+            text-align: center; 
+            color: #333; 
+        }
+        #loader { 
+            text-align: center; 
+            font-size: 1.5em; 
+            padding: 50px; 
+        }
+        .product-grid {
+            display: grid;
+            /* Crea columnas automáticas de 300px */
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+            max-width: 1200px;
+            margin: 20px auto;
+        }
+        .product-card {
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            overflow: hidden; /* Para que la imagen no se salga */
+            display: flex;
+            flex-direction: column;
+        }
+        .product-card img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover; /* Recorta la imagen para que encaje */
+            background-color: #eee; /* Color mientras carga */
+        }
+        .product-card .content {
+            padding: 20px;
+            flex-grow: 1;
+        }
+        .product-card h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.4em;
+            color: #111;
+        }
+        .product-card p {
+            margin: 4px 0;
+            color: #555;
+            line-height: 1.5;
+        }
+        .product-card .price {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #007bff;
+            margin-top: 10px;
+        }
+        .product-card .whatsapp {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 15px;
+            background-color: #25D366;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Mis Productos y Promociones</h1>
+
+    <div id="loader">Cargando productos...</div>
+
+    <div id="products-container" class="product-grid">
+        </div>
+
+    <script>
+        // --- ¡IMPORTANTE! ---
+        // 1. Pega la URL de tu Aplicación Web (de la Parte 1) aquí
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby942EyuquazPA9wTN93dnMQQYKKEy_ctTrrqUIZgrhZj-bFhgi9R3nyLsNEgHOynMWgw/exec';
+
+        
+        // 2. Esta función se ejecuta cuando la página carga
+        document.addEventListener('DOMContentLoaded', loadProducts);
+
+        async function loadProducts() {
+            const loader = document.getElementById('loader');
+            const container = document.getElementById('products-container');
+
+            try {
+                // 3. Llama a tu Google Apps Script
+                const response = await fetch(WEB_APP_URL);
+                if (!response.ok) {
+                    throw new Error('Error de red al cargar los datos.');
+                }
+                const json = await response.json();
+                
+                // Revisa si el script de Google nos envió un error
+                if (json.error) {
+                    throw new Error(json.error);
+                }
+
+                const items = json.items;
+
+                // 4. Oculta el "Cargando..."
+                loader.style.display = 'none';
+
+                if (items.length === 0) {
+                    container.innerHTML = '<p>No hay productos para mostrar.</p>';
+                    return;
+                }
+
+                // 5. Recorre cada producto y crea su tarjeta HTML
+                items.forEach(item => {
+                    // Obtenemos los datos usando los nombres exactos de tus columnas
+                    const title = item['Título de la promoción'] || item['Nombre del puesto'];
+                    const price = item['Precio'] || 'Consultar precio';
+                    const whatsapp = item['WhatsApp de contacto'];
+                    const product = item['Producto a la venta'] || '';
+                    const observations = item['Observaciones'] || '';
+                    const imageUrl = item['processedImageUrl']; // La URL especial que creamos
+
+                    let whatsappLink = '';
+                    if (whatsapp) {
+                        // Limpia el número (quita espacios, +, etc.) y crea el link de Wa.me
+                        const phone = whatsapp.replace(/\D/g, '');
+                        if(phone) {
+                            whatsappLink = `https://wa.me/${phone}`;
+                        }
+                    }
+
+                    // Crea un nuevo 'div' para la tarjeta
+                    const card = document.createElement('div');
+                    card.className = 'product-card';
+                    
+                    // HTML interno de la tarjeta
+                    card.innerHTML = `
+                        ${imageUrl ? `<img src="${imageUrl}" alt="${title}">` : ''}
+                        <div class="content">
+                            <h3>${title}</h3>
+                            <p><strong>Producto:</strong> ${product}</p>
+                            ${observations ? `<p><strong>Obs:</strong> ${observations}</p>` : ''}
+                            <p class="price">${price}</p>
+                            ${whatsappLink ? `<a href="${whatsappLink}" class="whatsapp" target="_blank">Contactar por WhatsApp</a>` : ''}
+                        </div>
+                    `;
+                    
+                    // 6. Añade la tarjeta al contenedor
+                    container.appendChild(card);
+                });
+
+            } catch (error) {
+                // Si algo sale mal, muestra el error
+                loader.innerHTML = `<strong>Error:</strong> No se pudieron cargar los productos. <br><small>${error.message}</small>`;
+                console.error('Error al cargar productos:', error);
+            }
+        }
+    </script>
+
+</body>
+</html>
