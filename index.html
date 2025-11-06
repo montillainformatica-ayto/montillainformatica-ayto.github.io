@@ -3,118 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mis Productos</title>
+    <title>Mis Promociones</title>
     
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            background-color: #f0f2f5; 
-            margin: 0; 
-            padding: 20px; 
-        }
-        h1 { 
-            text-align: center; 
-            color: #333; 
-        }
-        #loader { 
-            text-align: center; 
-            font-size: 1.5em; 
-            padding: 50px; 
-        }
-        .product-grid {
-            display: grid;
-            /* Crea columnas automáticas de 300px */
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 24px;
-            max-width: 1200px;
-            margin: 20px auto;
-        }
-        .product-card {
-            background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            overflow: hidden; /* Para que la imagen no se salga */
-            display: flex;
-            flex-direction: column;
-        }
-        .product-card img {
+        /* --- Reseteo Básico --- */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
             width: 100%;
-            height: 220px;
-            object-fit: cover; /* Recorta la imagen para que encaje */
-            background-color: #eee; /* Color mientras carga */
+            overflow: hidden; /* Evita barras de scroll */
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            color: white;
         }
-        .product-card .content {
-            padding: 20px;
-            flex-grow: 1;
+
+        /* --- Contenedor Principal del Slider --- */
+        #slider-container {
+            width: 100vw; /* 100% del ancho de la ventana */
+            height: 100vh; /* 100% del alto de la ventana */
+            position: relative;
         }
-        .product-card h3 {
-            margin-top: 0;
-            margin-bottom: 10px;
-            font-size: 1.4em;
-            color: #111;
+
+        /* --- Estilo de cada "Slide" (Publicación) --- */
+        .slide {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            
+            /* Animación de fundido (fade) */
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+            
+            /* Centrado (por si la imagen no carga) */
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        .product-card p {
-            margin: 4px 0;
-            color: #555;
-            line-height: 1.5;
+
+        /* La slide que está activa (visible) */
+        .slide.active {
+            opacity: 1;
         }
-        .product-card .price {
-            font-size: 1.3em;
+
+        /* --- Imagen de fondo de la slide --- */
+        .slide-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Rellena la pantalla sin deformar */
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        /* --- Contenido de texto sobre la imagen --- */
+        .slide-content {
+            position: relative; /* Para que esté sobre la imagen */
+            z-index: 2;
+            
+            /* Fondo difuminado en la parte inferior */
+            background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
+            
+            /* Posición en la parte inferior */
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            
+            padding: 50px 40px;
+            box-sizing: border-box;
+        }
+
+        .slide-content h3 {
+            font-size: 2.8em;
+            margin: 0 0 10px 0;
             font-weight: bold;
-            color: #007bff;
-            margin-top: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
         }
-        .product-card .whatsapp {
-            display: inline-block;
+        
+        .slide-content p {
+            font-size: 1.5em;
+            margin: 5px 0;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+        }
+
+        .slide-content .price {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4CAF50; /* Un verde llamativo */
             margin-top: 15px;
-            padding: 10px 15px;
+        }
+
+        .slide-content .whatsapp {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 25px;
             background-color: #25D366;
             color: white;
             text-decoration: none;
-            border-radius: 5px;
+            border-radius: 30px;
             font-weight: bold;
-            text-align: center;
+            font-size: 1.2em;
+        }
+
+        /* --- Pantalla de "Cargando..." --- */
+        #loader {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2em;
+            color: #888;
         }
     </style>
 </head>
 <body>
 
-    <h1>Mis Productos y Promociones</h1>
-
-    <div id="loader">Cargando productos...</div>
-
-    <div id="products-container" class="product-grid">
-        </div>
+    <div id="slider-container">
+        <div id="loader">Cargando promociones...</div>
+    </div>
 
     <script>
         // --- ¡IMPORTANTE! ---
-        // 1. Pega la URL de tu Aplicación Web (de la Parte 1) aquí
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby942EyuquazPA9wTN93dnMQQYKKEy_ctTrrqUIZgrhZj-bFhgi9R3nyLsNEgHOynMWgw/exec';
+        // Pega la URL de tu Aplicación Web (de Google Apps Script) aquí
+        const WEB_APP_URL = 'URL_QUE_COPIASTE_DE_APPS_SCRIPT_VA_AQUI';
 
+        // Duración de cada slide en milisegundos (ej. 7000 = 7 segundos)
+        const SLIDE_DURATION = 7000;
+
+        // Variables globales para el slider
+        let slides = [];
+        let currentIndex = 0;
         
-        // 2. Esta función se ejecuta cuando la página carga
+        // 1. Esta función se ejecuta cuando la página carga
         document.addEventListener('DOMContentLoaded', loadProducts);
 
         async function loadProducts() {
+            const container = document.getElementById('slider-container');
             const loader = document.getElementById('loader');
-            const container = document.getElementById('products-container');
 
             try {
-                // 3. Llama a tu Google Apps Script
+                // 2. Llama a tu Google Apps Script
                 const response = await fetch(WEB_APP_URL);
-                if (!response.ok) {
-                    throw new Error('Error de red al cargar los datos.');
-                }
-                const json = await response.json();
+                if (!response.ok) throw new Error('Error de red.');
                 
-                // Revisa si el script de Google nos envió un error
-                if (json.error) {
-                    throw new Error(json.error);
-                }
-
+                const json = await response.json();
+                if (json.error) throw new Error(json.error);
+                
                 const items = json.items;
 
-                // 4. Oculta el "Cargando..."
+                // 3. Oculta el "Cargando..."
                 loader.style.display = 'none';
 
                 if (items.length === 0) {
@@ -122,53 +164,79 @@
                     return;
                 }
 
-                // 5. Recorre cada producto y crea su tarjeta HTML
+                // 4. Recorre cada producto y crea su "slide"
                 items.forEach(item => {
-                    // Obtenemos los datos usando los nombres exactos de tus columnas
                     const title = item['Título de la promoción'] || item['Nombre del puesto'];
                     const price = item['Precio'] || 'Consultar precio';
                     const whatsapp = item['WhatsApp de contacto'];
                     const product = item['Producto a la venta'] || '';
                     const observations = item['Observaciones'] || '';
-                    const imageUrl = item['processedImageUrl']; // La URL especial que creamos
+                    const imageUrl = item['processedImageUrl'];
 
                     let whatsappLink = '';
                     if (whatsapp) {
-                        // Limpia el número (quita espacios, +, etc.) y crea el link de Wa.me
                         const phone = whatsapp.replace(/\D/g, '');
-                        if(phone) {
-                            whatsappLink = `https://wa.me/${phone}`;
-                        }
+                        if(phone) whatsappLink = `https://wa.me/${phone}`;
                     }
 
-                    // Crea un nuevo 'div' para la tarjeta
-                    const card = document.createElement('div');
-                    card.className = 'product-card';
+                    // Crea un 'div' para la slide
+                    const slide = document.createElement('div');
+                    slide.className = 'slide';
                     
-                    // HTML interno de la tarjeta
-                    card.innerHTML = `
-                        ${imageUrl ? `<img src="${imageUrl}" alt="${title}">` : ''}
-                        <div class="content">
+                    // HTML interno de la slide
+                    slide.innerHTML = `
+                        ${imageUrl ? `<img src="${imageUrl}" class="slide-image" alt="${title}">` : ''}
+                        
+                        <div class="slide-content">
                             <h3>${title}</h3>
-                            <p><strong>Producto:</strong> ${product}</p>
-                            ${observations ? `<p><strong>Obs:</strong> ${observations}</p>` : ''}
+                            <p>${product}</p>
+                            ${observations ? `<p><small>${observations}</small></p>` : ''}
                             <p class="price">${price}</p>
                             ${whatsappLink ? `<a href="${whatsappLink}" class="whatsapp" target="_blank">Contactar por WhatsApp</a>` : ''}
                         </div>
                     `;
                     
-                    // 6. Añade la tarjeta al contenedor
-                    container.appendChild(card);
+                    // 5. Añade la slide al contenedor
+                    container.appendChild(slide);
                 });
+                
+                // 6. Una vez creadas todas las slides, inicia el slider
+                startSlider();
 
             } catch (error) {
-                // Si algo sale mal, muestra el error
                 loader.innerHTML = `<strong>Error:</strong> No se pudieron cargar los productos. <br><small>${error.message}</small>`;
-                console.error('Error al cargar productos:', error);
+                console.error('Error:', error);
             }
+        }
+
+        // --- Funciones del Slider ---
+
+        function startSlider() {
+            // Obtiene todas las slides que acabamos de crear
+            slides = document.querySelectorAll('#slider-container .slide');
+            
+            if (slides.length === 0) return;
+
+            // Muestra la primera slide
+            slides[0].classList.add('active');
+            
+            // Inicia el carrusel automático
+            setInterval(showNextSlide, SLIDE_DURATION);
+        }
+
+        function showNextSlide() {
+            // Oculta la slide actual
+            slides[currentIndex].classList.remove('active');
+            
+            // Calcula la siguiente slide
+            // (currentIndex + 1) % slides.length es un truco para volver a 0
+            // cuando llega al final de la lista.
+            currentIndex = (currentIndex + 1) % slides.length;
+            
+            // Muestra la siguiente slide
+            slides[currentIndex].classList.add('active');
         }
     </script>
 
 </body>
-
 </html>
