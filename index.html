@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mis Productos</title>
+    <title>Mis Productos - Slider</title>
     
     <style>
         body { 
@@ -11,164 +11,359 @@
             background-color: #f0f2f5; 
             margin: 0; 
             padding: 20px; 
+            overflow-x: hidden;
         }
         h1 { 
             text-align: center; 
             color: #333; 
+            margin-bottom: 30px;
         }
         #loader { 
             text-align: center; 
             font-size: 1.5em; 
             padding: 50px; 
         }
-        .product-grid {
-            display: grid;
-            /* Crea columnas automáticas de 300px */
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 24px;
-            max-width: 1200px;
-            margin: 20px auto;
+        
+        /* Contenedor principal del slider */
+        .slider-container {
+            position: relative;
+            max-width: 900px;
+            margin: 0 auto;
+            overflow: hidden;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
+        
+        /* Pista de slides */
+        .slider-track {
+            display: flex;
+            transition: transform 0.6s ease-in-out;
+        }
+        
+        /* Cada tarjeta de producto */
         .product-card {
+            min-width: 100%;
             background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            overflow: hidden; /* Para que la imagen no se salga */
             display: flex;
             flex-direction: column;
+            box-sizing: border-box;
         }
+        
         .product-card img {
             width: 100%;
-            height: 220px;
-            object-fit: cover; /* Recorta la imagen para que encaje */
-            background-color: #eee; /* Color mientras carga */
+            height: 400px;
+            object-fit: cover;
+            background-color: #eee;
         }
+        
         .product-card .content {
-            padding: 20px;
-            flex-grow: 1;
+            padding: 30px;
+            min-height: 250px;
         }
+        
         .product-card h3 {
             margin-top: 0;
-            margin-bottom: 10px;
-            font-size: 1.4em;
+            margin-bottom: 15px;
+            font-size: 1.8em;
             color: #111;
         }
+        
         .product-card p {
-            margin: 4px 0;
+            margin: 8px 0;
             color: #555;
-            line-height: 1.5;
+            line-height: 1.6;
+            font-size: 1.1em;
         }
+        
         .product-card .price {
-            font-size: 1.3em;
+            font-size: 1.5em;
             font-weight: bold;
             color: #007bff;
-            margin-top: 10px;
+            margin-top: 15px;
         }
+        
         .product-card .whatsapp {
             display: inline-block;
-            margin-top: 15px;
-            padding: 10px 15px;
+            margin-top: 20px;
+            padding: 12px 20px;
             background-color: #25D366;
             color: white;
             text-decoration: none;
-            border-radius: 5px;
+            border-radius: 8px;
             font-weight: bold;
             text-align: center;
+            transition: background-color 0.3s;
+        }
+        
+        .product-card .whatsapp:hover {
+            background-color: #1da851;
+        }
+        
+        /* Botones de navegación */
+        .slider-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-size: 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            z-index: 10;
+        }
+        
+        .slider-nav:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        
+        .slider-nav.prev {
+            left: 20px;
+        }
+        
+        .slider-nav.next {
+            right: 20px;
+        }
+        
+        /* Indicadores (puntos) */
+        .slider-indicators {
+            text-align: center;
+            padding: 20px 0;
+        }
+        
+        .indicator-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            margin: 0 6px;
+            background-color: #ccc;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .indicator-dot.active {
+            background-color: #007bff;
+            width: 14px;
+            height: 14px;
+        }
+        
+        /* Contador de slides */
+        .slide-counter {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 10;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .product-card img {
+                height: 300px;
+            }
+            .product-card .content {
+                padding: 20px;
+                min-height: 200px;
+            }
+            .slider-nav {
+                padding: 10px 15px;
+                font-size: 16px;
+            }
         }
     </style>
 </head>
 <body>
 
-    <h1>Mis Productos y Promociones</h1>
+    <h1>📱 Mis Productos y Promociones</h1>
 
     <div id="loader">Cargando productos...</div>
 
-    <div id="products-container" class="product-grid">
+    <div id="slider-wrapper" style="display: none;">
+        <div class="slider-container">
+            <div class="slider-track" id="slider-track"></div>
+            
+            <button class="slider-nav prev" onclick="moveSlide(-1)">❮</button>
+            <button class="slider-nav next" onclick="moveSlide(1)">❯</button>
+            
+            <div class="slide-counter">
+                <span id="current-slide">1</span> / <span id="total-slides">0</span>
+            </div>
         </div>
+        
+        <div class="slider-indicators" id="indicators"></div>
+    </div>
 
     <script>
-        // --- ¡IMPORTANTE! ---
-        // 1. Pega la URL de tu Aplicación Web (de la Parte 1) aquí
+        // URL de tu Aplicación Web de Google Apps Script
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby942EyuquazPA9wTN93dnMQQYKKEy_ctTrrqUIZgrhZj-bFhgi9R3nyLsNEgHOynMWgw/exec';
 
-        
-        // 2. Esta función se ejecuta cuando la página carga
+        let currentSlide = 0;
+        let totalSlides = 0;
+        let autoplayInterval;
+        let products = [];
+
+        // Se ejecuta cuando la página carga
         document.addEventListener('DOMContentLoaded', loadProducts);
 
         async function loadProducts() {
             const loader = document.getElementById('loader');
-            const container = document.getElementById('products-container');
+            const sliderWrapper = document.getElementById('slider-wrapper');
+            const sliderTrack = document.getElementById('slider-track');
 
             try {
-                // 3. Llama a tu Google Apps Script
                 const response = await fetch(WEB_APP_URL);
                 if (!response.ok) {
                     throw new Error('Error de red al cargar los datos.');
                 }
                 const json = await response.json();
                 
-                // Revisa si el script de Google nos envió un error
                 if (json.error) {
                     throw new Error(json.error);
                 }
 
-                const items = json.items;
+                products = json.items;
+                totalSlides = products.length;
 
-                // 4. Oculta el "Cargando..."
                 loader.style.display = 'none';
 
-                if (items.length === 0) {
-                    container.innerHTML = '<p>No hay productos para mostrar.</p>';
+                if (totalSlides === 0) {
+                    loader.innerHTML = '<p>No hay productos para mostrar.</p>';
+                    loader.style.display = 'block';
                     return;
                 }
 
-                // 5. Recorre cada producto y crea su tarjeta HTML
-                items.forEach(item => {
-                    // Obtenemos los datos usando los nombres exactos de tus columnas
+                // Mostrar el slider
+                sliderWrapper.style.display = 'block';
+                document.getElementById('total-slides').textContent = totalSlides;
+
+                // Crear las tarjetas de productos
+                products.forEach((item, index) => {
                     const title = item['Título de la promoción'] || item['Nombre del puesto'];
                     const price = item['Precio'] || 'Consultar precio';
                     const whatsapp = item['WhatsApp de contacto'];
                     const product = item['Producto a la venta'] || '';
                     const observations = item['Observaciones'] || '';
-                    const imageUrl = item['processedImageUrl']; // La URL especial que creamos
+                    const imageUrl = item['processedImageUrl'];
 
                     let whatsappLink = '';
                     if (whatsapp) {
-                        // Limpia el número (quita espacios, +, etc.) y crea el link de Wa.me
                         const phone = whatsapp.replace(/\D/g, '');
                         if(phone) {
                             whatsappLink = `https://wa.me/${phone}`;
                         }
                     }
 
-                    // Crea un nuevo 'div' para la tarjeta
                     const card = document.createElement('div');
                     card.className = 'product-card';
                     
-                    // HTML interno de la tarjeta
                     card.innerHTML = `
-                        ${imageUrl ? `<img src="${imageUrl}" alt="${title}">` : ''}
+                        ${imageUrl ? `<img src="${imageUrl}" alt="${title}" onerror="this.src='https://via.placeholder.com/900x400?text=Sin+Imagen'">` : ''}
                         <div class="content">
                             <h3>${title}</h3>
-                            <p><strong>Producto:</strong> ${product}</p>
-                            ${observations ? `<p><strong>Obs:</strong> ${observations}</p>` : ''}
-                            <p class="price">${price}</p>
-                            ${whatsappLink ? `<a href="${whatsappLink}" class="whatsapp" target="_blank">Contactar por WhatsApp</a>` : ''}
+                            <p><strong>📦 Producto:</strong> ${product}</p>
+                            ${observations ? `<p><strong>📝 Observaciones:</strong> ${observations}</p>` : ''}
+                            <p class="price">💰 ${price}</p>
+                            ${whatsappLink ? `<a href="${whatsappLink}" class="whatsapp" target="_blank">💬 Contactar por WhatsApp</a>` : ''}
                         </div>
                     `;
                     
-                    // 6. Añade la tarjeta al contenedor
-                    container.appendChild(card);
+                    sliderTrack.appendChild(card);
                 });
 
+                // Crear indicadores
+                createIndicators();
+
+                // Iniciar autoplay
+                startAutoplay();
+
             } catch (error) {
-                // Si algo sale mal, muestra el error
                 loader.innerHTML = `<strong>Error:</strong> No se pudieron cargar los productos. <br><small>${error.message}</small>`;
                 console.error('Error al cargar productos:', error);
             }
         }
+
+        // Crear puntos indicadores
+        function createIndicators() {
+            const indicatorsContainer = document.getElementById('indicators');
+            for (let i = 0; i < totalSlides; i++) {
+                const dot = document.createElement('span');
+                dot.className = 'indicator-dot';
+                if (i === 0) dot.classList.add('active');
+                dot.onclick = () => goToSlide(i);
+                indicatorsContainer.appendChild(dot);
+            }
+        }
+
+        // Mover el slider
+        function moveSlide(direction) {
+            currentSlide += direction;
+            
+            if (currentSlide >= totalSlides) {
+                currentSlide = 0;
+            } else if (currentSlide < 0) {
+                currentSlide = totalSlides - 1;
+            }
+            
+            updateSlider();
+            resetAutoplay();
+        }
+
+        // Ir a un slide específico
+        function goToSlide(index) {
+            currentSlide = index;
+            updateSlider();
+            resetAutoplay();
+        }
+
+        // Actualizar la posición del slider
+        function updateSlider() {
+            const sliderTrack = document.getElementById('slider-track');
+            const offset = -currentSlide * 100;
+            sliderTrack.style.transform = `translateX(${offset}%)`;
+            
+            // Actualizar contador
+            document.getElementById('current-slide').textContent = currentSlide + 1;
+            
+            // Actualizar indicadores
+            const dots = document.querySelectorAll('.indicator-dot');
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentSlide);
+            });
+        }
+
+        // Iniciar autoplay (cambia cada 4 segundos)
+        function startAutoplay() {
+            autoplayInterval = setInterval(() => {
+                moveSlide(1);
+            }, 4000); // 4000 ms = 4 segundos
+        }
+
+        // Reiniciar autoplay cuando el usuario interactúa
+        function resetAutoplay() {
+            clearInterval(autoplayInterval);
+            startAutoplay();
+        }
+
+        // Pausar autoplay cuando el mouse está sobre el slider
+        document.addEventListener('DOMContentLoaded', () => {
+            const sliderContainer = document.querySelector('.slider-container');
+            if (sliderContainer) {
+                sliderContainer.addEventListener('mouseenter', () => {
+                    clearInterval(autoplayInterval);
+                });
+                sliderContainer.addEventListener('mouseleave', () => {
+                    startAutoplay();
+                });
+            }
+        });
     </script>
 
 </body>
-
 </html>
